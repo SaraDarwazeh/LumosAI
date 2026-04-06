@@ -1,0 +1,196 @@
+// ──────────────────────────────────────────────────────────────────────────────
+// Lumos — Prisma Schema
+// PostgreSQL data model for the productivity backend.
+// ──────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum TaskStatus {
+  todo
+  doing
+  done
+}
+
+enum Priority {
+  low
+  medium
+  high
+}
+
+enum ReminderType {
+  notification
+  alarm
+  external
+}
+
+enum ReminderStatus {
+  pending
+  sent
+}
+
+enum IdeaStatus {
+  idea
+  exploring
+  building
+  done
+}
+
+enum AttachedToType {
+  task
+  idea
+  none
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  firebase_uid String   @unique
+  email        String
+  name         String?
+  created_at   DateTime @default(now())
+
+  // Relations
+  tasks         Task[]
+  labels        Label[]
+  ideas         Idea[]
+  notes         Note[]
+  integrations  Integration[]
+  activity_logs ActivityLog[]
+
+  @@map("users")
+}
+
+model Task {
+  id              String     @id @default(uuid())
+  user_id         String
+  title           String
+  description     String?
+  status          TaskStatus @default(todo)
+  due_date        DateTime?
+  priority        Priority   @default(medium)
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+  last_checked_at DateTime?
+  completed_at    DateTime?
+
+  // Relations
+  user      User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  labels    TaskLabel[]
+  reminders Reminder[]
+  notes     Note[]
+
+  @@map("tasks")
+}
+
+model Label {
+  id      String @id @default(uuid())
+  user_id String
+  name    String
+  color   String
+
+  // Relations
+  user  User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  tasks TaskLabel[]
+
+  @@map("labels")
+}
+
+model TaskLabel {
+  task_id  String
+  label_id String
+
+  task  Task  @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [label_id], references: [id], onDelete: Cascade)
+
+  @@id([task_id, label_id])
+  @@map("task_labels")
+}
+
+model Reminder {
+  id           String         @id @default(uuid())
+  task_id      String?
+  type         ReminderType
+  scheduled_at DateTime
+  status       ReminderStatus @default(pending)
+
+  // Relations
+  task Task? @relation(fields: [task_id], references: [id], onDelete: SetNull)
+
+  @@map("reminders")
+}
+
+model Idea {
+  id          String     @id @default(uuid())
+  user_id     String
+  title       String
+  description String?
+  status      IdeaStatus @default(idea)
+  created_at  DateTime   @default(now())
+
+  // Relations
+  user  User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  notes Note[]
+
+  @@map("ideas")
+}
+
+model Note {
+  id               String         @id @default(uuid())
+  user_id          String
+  content          String
+  attached_to_type AttachedToType @default(none)
+  attached_to_id   String?
+
+  // Soft relations (polymorphic — resolved in application layer)
+  task_id String?
+  idea_id String?
+
+  created_at DateTime @default(now())
+
+  // Relations
+  user User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [task_id], references: [id], onDelete: SetNull)
+  idea Idea? @relation(fields: [idea_id], references: [id], onDelete: SetNull)
+
+  @@map("notes")
+}
+
+model Integration {
+  id            String   @id @default(uuid())
+  user_id       String
+  provider      String
+  access_token  String
+  refresh_token String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, provider])
+  @@map("integrations")
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  user_id     String
+  action      String
+  entity_type String
+  entity_id   String
+  created_at  DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("activity_logs")
+}
