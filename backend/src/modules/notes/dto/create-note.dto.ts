@@ -1,0 +1,15 @@
+import { AttachedToType } from '@prisma/client';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+
+export class CreateNoteDto {
+  @IsString()
+  @IsNotEmpty()
+  content: string;
+
+  @IsEnum(AttachedToType)
+  attached_to_type: AttachedToType;
+
+  @IsOptional()
+  @IsUUID('4')
+  attached_to_id?: string;
+}
