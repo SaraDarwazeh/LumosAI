@@ -1,0 +1,19 @@
+# Node
+node_modules/
+dist/
+
+# Python
+**/__pycache__/
+*.pyc
+
+# Env
+.env
+!.env.example
+
+# Firebase
+backend/firebase/*.json
+
+# OS
+*.log
+.DS_Store
+coverage/

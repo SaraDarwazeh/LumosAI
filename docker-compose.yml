@@ -1,0 +1,125 @@
+services:
+  # ──────────────────────────────────────────
+  # PostgreSQL 15 — source of truth
+  # ──────────────────────────────────────────
+  postgres:
+    image: postgres:15
+    container_name: lumos_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────
+  # NestJS backend — dev mode with hot reload
+  # ──────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lumos_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      MEMORY_SERVICE_URL: http://memory-service:8010
+      PORT: 3000
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+    ports:
+      - "3000:3000"
+
+  # ──────────────────────────────────────────
+  # MCP server — FastAPI tools layer for AI systems
+  # ──────────────────────────────────────────
+  mcp:
+    build:
+      context: ./mcp
+      dockerfile: Dockerfile
+    container_name: lumos_mcp
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      BACKEND_BASE_URL: http://backend:3000
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8000
+      MCP_REQUEST_TIMEOUT: 30
+    volumes:
+      - ./mcp:/app
+    ports:
+      - "8000:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # ──────────────────────────────────────────
+  # Qdrant — vector database for semantic memory
+  # ──────────────────────────────────────────
+  qdrant:
+    image: qdrant/qdrant
+    container_name: lumos_qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+  # ──────────────────────────────────────────
+  # Memory service — embedding + vector search layer
+  # ──────────────────────────────────────────
+  memory-service:
+    build:
+      context: ./memory
+      dockerfile: Dockerfile
+    container_name: lumos_memory
+    restart: unless-stopped
+    depends_on:
+      - qdrant
+    environment:
+      MEMORY_HOST: 0.0.0.0
+      MEMORY_PORT: 8010
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_COLLECTION_NAME: lumos_memory
+      EMBEDDING_MODEL_NAME: sentence-transformers/all-MiniLM-L6-v2
+      HF_HOME: /opt/huggingface
+      SENTENCE_TRANSFORMERS_HOME: /opt/huggingface
+    volumes:
+      - ./memory:/app
+    ports:
+      - "8010:8010"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8010
+
+  # ──────────────────────────────────────────
+  # pgAdmin 4 — database inspection UI
+  # ──────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: lumos_pgadmin
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  qdrant_storage:
