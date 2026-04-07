@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Test - Lumos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section h2 {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 14px 16px;
+            border-radius: 6px;
+            display: none;
+            font-size: 14px;
+            border-left: 4px solid;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: #dc3545;
+            display: block;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left-color: #17a2b8;
+            display: block;
+        }
+
+        .response-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #333;
+            display: none;
+        }
+
+        .response-box.visible {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .info-box {
+            background: #e8eef7;
+            border-left: 4px solid #667eea;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .info-box code {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .url-example {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 12px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: #666;
+            word-break: break-all;
+        }
+
+        .divider {
+            text-align: center;
+            color: #999;
+            margin: 30px 0;
+            font-size: 12px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 15px;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Lumos — Google OAuth Test</h1>
+        <p class="subtitle">Test the Google OAuth and Calendar integration</p>
+
+        <div class="info-box">
+            <strong>Backend:</strong> <code>http://localhost:3000</code><br>
+            <strong>Make sure backend is running before testing!</strong>
+        </div>
+
+        <!-- Step 1: OAuth Connection -->
+        <div class="section">
+            <h2>
+                <span class="step-number">1</span>
+                Connect Google Account
+            </h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                Click to start the OAuth flow. Your browser will redirect to Google's consent screen.
+            </p>
+            <button onclick="connectGoogle()">🔗 Connect Google Account</button>
+            <div id="oauthStatus" class="status"></div>
+            
+            <div class="url-example">
+                <strong>What happens:</strong><br>
+                1. Click button above<br>
+                2. Redirects to: <code>http://localhost:3000/auth/google</code><br>
+                3. You login with Google<br>
+                4. Backend stores tokens in database<br>
+                5. You return to this page
+            </div>
+        </div>
+
+        <!-- Step 2: Test Calendar Event -->
+        <div class="section">
+            <h2>
+                <span class="step-number">2</span>
+                Test Create Calendar Event
+            </h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                After connecting Google, test creating a calendar event through the chat tool system.
+            </p>
+
+            <div class="input-group">
+                <label for="conversationId">Conversation ID:</label>
+                <input type="text" id="conversationId" placeholder="test-conv-123" value="test-conv-event">
+            </div>
+
+            <div class="input-group">
+                <label for="firebaseToken">Firebase ID Token:</label>
+                <input type="text" id="firebaseToken" placeholder="Paste your Firebase ID token here">
+                <div class="note">
+                    💡 You can get a Firebase token after authenticating through the backend, or use your own Firebase app.
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="eventMessage">Event Description:</label>
+                <input type="text" id="eventMessage" placeholder="Create an event called Team Meeting tomorrow at 3pm" value="Create a calendar event called Project Sync tomorrow at 2pm">
+            </div>
+
+            <button onclick="testCreateEvent()">📅 Test Create Event</button>
+            <div id="eventStatus" class="status"></div>
+            <div id="eventResponse" class="response-box"></div>
+        </div>
+
+        <!-- Step 3: Debug -->
+        <div class="section">
+            <h2>
+                <span class="step-number">3</span>
+                Debug & Tools
+            </h2>
+            <div class="button-group">
+                <button onclick="clearQueryParams()">🗑️ Clear Query Params</button>
+                <button onclick="copyCurrentUrl()">📋 Copy URL</button>
+            </div>
+            <div id="debugInfo" class="response-box" style="display: block;"></div>
+        </div>
+
+        <div class="divider">✨ Built with ❤️ for Lumos</div>
+    </div>
+
+    <script>
+        // Parse query parameters
+        function getQueryParams() {
+            return new URLSearchParams(window.location.search);
+        }
+
+        // On page load, check for OAuth callback
+        window.addEventListener('DOMContentLoaded', function() {
+            checkOAuthCallback();
+            updateDebugInfo();
+        });
+
+        // Check if this is an OAuth callback
+        function checkOAuthCallback() {
+            const params = getQueryParams();
+            const connected = params.get('connected');
+            const error = params.get('error');
+
+            if (connected === 'true') {
+                showOAuthStatus(
+                    '✅ Google connected successfully! Tokens stored in database.',
+                    'success'
+                );
+            } else if (error) {
+                showOAuthStatus(
+                    '❌ Connection failed: ' + decodeURIComponent(error),
+                    'error'
+                );
+            }
+        }
+
+        // Start OAuth flow
+        function connectGoogle() {
+            const statusDiv = document.getElementById('oauthStatus');
+            statusDiv.className = 'status info';
+            statusDiv.textContent = '⏳ Redirecting to Google OAuth...';
+            
+            setTimeout(() => {
+                window.location.href = 'http://localhost:3000/auth/google';
+            }, 500);
+        }
+
+        // Show OAuth status
+        function showOAuthStatus(message, type) {
+            const statusDiv = document.getElementById('oauthStatus');
+            statusDiv.className = 'status ' + type;
+            statusDiv.textContent = message;
+        }
+
+        // Test creating a calendar event
+        async function testCreateEvent() {
+            const conversationId = document.getElementById('conversationId').value;
+            const firebaseToken = document.getElementById('firebaseToken').value;
+            const eventMessage = document.getElementById('eventMessage').value;
+            
+            const statusDiv = document.getElementById('eventStatus');
+            const responseDiv = document.getElementById('eventResponse');
+
+            // Validation
+            if (!conversationId.trim()) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Conversation ID required';
+                return;
+            }
+
+            if (!firebaseToken.trim()) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Firebase token required';
+                return;
+            }
+
+            if (!eventMessage.trim()) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Event message required';
+                return;
+            }
+
+            // Show loading
+            statusDiv.className = 'status info';
+            statusDiv.textContent = '⏳ Sending request...';
+            responseDiv.classList.remove('visible');
+
+            try {
+                const response = await fetch('http://localhost:3000/chat?debug=true', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + firebaseToken
+                    },
+                    body: JSON.stringify({
+                        conversation_id: conversationId,
+                        message: eventMessage
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = '✅ Event request processed!';
+                    responseDiv.textContent = JSON.stringify(data, null, 2);
+                    responseDiv.classList.add('visible');
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = '❌ Error: ' + (data.message || response.status);
+                    responseDiv.textContent = JSON.stringify(data, null, 2);
+                    responseDiv.classList.add('visible');
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Network error: ' + error.message;
+                responseDiv.textContent = error.toString();
+                responseDiv.classList.add('visible');
+            }
+        }
+
+        // Update debug information
+        function updateDebugInfo() {
+            const debugDiv = document.getElementById('debugInfo');
+            const params = getQueryParams();
+            
+            const info = {
+                'Page URL': window.location.href,
+                'Backend URL': 'http://localhost:3000',
+                'Query Parameters': params.size > 0 ? Object.fromEntries(params) : 'None',
+                'Timestamp': new Date().toLocaleString()
+            };
+
+            debugDiv.textContent = JSON.stringify(info, null, 2);
+        }
+
+        // Clear query parameters
+        function clearQueryParams() {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            document.getElementById('oauthStatus').innerHTML = '';
+            updateDebugInfo();
+        }
+
+        // Copy current URL
+        function copyCurrentUrl() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✅ URL copied to clipboard!');
+            }).catch(() => {
+                alert('❌ Failed to copy URL');
+            });
+        }
+    </script>
+</body>
+</html>

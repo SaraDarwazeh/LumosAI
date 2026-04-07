@@ -32,12 +32,22 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      ollama:
+        condition: service_started
     environment:
       NODE_ENV: development
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       MEMORY_SERVICE_URL: http://memory-service:8010
+      LLM_PROVIDER: ollama
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: gemma:2b
       PORT: 3000
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
     volumes:
+      - ./backend/package.json:/app/package.json
+      - ./backend/package-lock.json:/app/package-lock.json
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
     ports:
@@ -103,6 +113,18 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8010
 
   # ──────────────────────────────────────────
+  # Ollama — local LLM runtime
+  # ──────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: lumos_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────
   # pgAdmin 4 — database inspection UI
   # ──────────────────────────────────────────
   pgadmin:
@@ -123,3 +145,4 @@ volumes:
   postgres_data:
   pgadmin_data:
   qdrant_storage:
+  ollama_data:

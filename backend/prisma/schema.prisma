@@ -50,6 +50,11 @@ enum AttachedToType {
   none
 }
 
+enum MessageRole {
+  user
+  assistant
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -64,7 +69,9 @@ model User {
   labels        Label[]
   ideas         Idea[]
   notes         Note[]
+  conversations Conversation[]
   integrations  Integration[]
+  googleAccount GoogleAccount?
   activity_logs ActivityLog[]
 
   @@map("users")
@@ -147,6 +154,7 @@ model Idea {
 model Note {
   id               String         @id @default(uuid())
   user_id          String
+  title            String?
   content          String
   attached_to_type AttachedToType @default(none)
   attached_to_id   String?
@@ -165,6 +173,32 @@ model Note {
   @@map("notes")
 }
 
+model Conversation {
+  id         String   @id @default(uuid())
+  user_id    String
+  title      String?
+  created_at DateTime @default(now())
+
+  user     User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([user_id, created_at])
+  @@map("conversations")
+}
+
+model Message {
+  id              String      @id @default(uuid())
+  conversation_id String
+  role            MessageRole
+  content         String
+  created_at      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id, created_at])
+  @@map("messages")
+}
+
 model Integration {
   id            String   @id @default(uuid())
   user_id       String
@@ -179,6 +213,20 @@ model Integration {
 
   @@unique([user_id, provider])
   @@map("integrations")
+}
+
+model GoogleAccount {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  accessToken  String
+  refreshToken String
+  expiryDate   DateTime
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("google_accounts")
 }
 
 model ActivityLog {

@@ -16,7 +16,7 @@ class StrictSchema(BaseModel):
 class IndexMemoryRequest(StrictSchema):
   id: UUID4
   text: str = Field(min_length=1)
-  type: Literal['note', 'idea']
+  type: Literal['note', 'idea', 'message', 'signal']
   metadata: dict[str, Any] = Field(default_factory=dict)
 
 

@@ -78,6 +78,31 @@ class GetNotesInput(StrictSchema):
   pass
 
 
+class UpdateNoteInput(StrictSchema):
+  id: UUID4
+  content: str | None = Field(default=None, min_length=1)
+  attached_to_type: Literal['task', 'idea', 'none'] | None = None
+  attached_to_id: UUID4 | None = None
+
+  @model_validator(mode='after')
+  def validate_attachment(self):
+    # Only validate if attached_to_type is being updated
+    if self.attached_to_type is not None:
+      if self.attached_to_type == 'none' and self.attached_to_id is not None:
+        raise ValueError('attached_to_id must not be provided when attached_to_type is "none".')
+
+      if self.attached_to_type in {'task', 'idea'} and self.attached_to_id is None:
+        raise ValueError(
+          'attached_to_id is required when attached_to_type is "task" or "idea".',
+        )
+
+    return self
+
+
+class DeleteNoteInput(StrictSchema):
+  id: UUID4
+
+
 class CreateReminderInput(StrictSchema):
   task_id: UUID4 | None = None
   type: Literal['notification', 'alarm', 'external']
@@ -111,3 +136,14 @@ class CreateIdeaInput(StrictSchema):
 
 class GetIdeasInput(StrictSchema):
   pass
+
+
+class UpdateIdeaInput(StrictSchema):
+  id: UUID4
+  title: str | None = Field(default=None, min_length=1)
+  description: str | None = None
+  status: Literal['idea', 'exploring', 'building', 'done'] | None = None
+
+
+class DeleteIdeaInput(StrictSchema):
+  id: UUID4

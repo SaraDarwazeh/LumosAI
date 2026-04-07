@@ -14,6 +14,8 @@ from app.schemas.tool_schemas import (
   CreateNoteInput,
   CreateReminderInput,
   CreateTaskInput,
+  DeleteIdeaInput,
+  DeleteNoteInput,
   DeleteTaskInput,
   ExecuteToolRequest,
   ExecuteToolResponse,
@@ -22,10 +24,12 @@ from app.schemas.tool_schemas import (
   GetRemindersInput,
   GetTasksInput,
   ToolMetadata,
+  UpdateIdeaInput,
+  UpdateNoteInput,
   UpdateTaskInput,
 )
-from app.tools.ideas import create_idea, get_ideas
-from app.tools.notes import create_note, get_notes
+from app.tools.ideas import create_idea, delete_idea, get_ideas, update_idea
+from app.tools.notes import create_note, delete_note, get_notes, update_note
 from app.tools.reminders import create_reminder, get_reminders
 from app.tools.tasks import create_task, delete_task, get_tasks, update_task
 
@@ -107,6 +111,27 @@ TOOL_REGISTRY = {
     example_input={},
     handler=get_notes,
   ),
+  'update_note': ToolRegistration(
+    name='update_note',
+    description='Update an existing note by id.',
+    category='notes',
+    input_model=UpdateNoteInput,
+    example_input={
+      'id': '11111111-1111-4111-8111-111111111111',
+      'content': 'Updated note content',
+    },
+    handler=update_note,
+  ),
+  'delete_note': ToolRegistration(
+    name='delete_note',
+    description='Delete a note by id.',
+    category='notes',
+    input_model=DeleteNoteInput,
+    example_input={
+      'id': '11111111-1111-4111-8111-111111111111',
+    },
+    handler=delete_note,
+  ),
   'create_reminder': ToolRegistration(
     name='create_reminder',
     description='Create a new reminder, optionally linked to a task.',
@@ -146,6 +171,28 @@ TOOL_REGISTRY = {
     input_model=GetIdeasInput,
     example_input={},
     handler=get_ideas,
+  ),
+  'update_idea': ToolRegistration(
+    name='update_idea',
+    description='Update an existing idea by id.',
+    category='ideas',
+    input_model=UpdateIdeaInput,
+    example_input={
+      'id': '11111111-1111-4111-8111-111111111111',
+      'title': 'Updated idea title',
+      'status': 'exploring',
+    },
+    handler=update_idea,
+  ),
+  'delete_idea': ToolRegistration(
+    name='delete_idea',
+    description='Delete an idea by id.',
+    category='ideas',
+    input_model=DeleteIdeaInput,
+    example_input={
+      'id': '11111111-1111-4111-8111-111111111111',
+    },
+    handler=delete_idea,
   ),
 }
 

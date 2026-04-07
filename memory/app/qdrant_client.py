@@ -9,7 +9,7 @@ from qdrant_client.http import models
 from app.embedding import EmbeddingService
 
 
-MIN_SCORE = 0.4
+MIN_SCORE = 0.25
 KEYWORD_MIN_LENGTH = 2
 
 
@@ -84,7 +84,6 @@ class MemoryQdrantClient:
       with_payload=True,
     )
 
-    keywords = self._extract_keywords(query)
     deduped_results: dict[str, dict[str, Any]] = {}
 
     for result in search_results:
@@ -93,9 +92,6 @@ class MemoryQdrantClient:
 
       payload = result.payload or {}
       text = str(payload.get('text') or '')
-
-      if keywords and not self._text_matches_keywords(text, keywords):
-        continue
 
       reranked_score = self._cosine_similarity(
         query_vector,

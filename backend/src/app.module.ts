@@ -4,6 +4,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
+import { GoogleModule } from './modules/google/google.module';
+import { HealthModule } from './modules/health/health.module';
 
 // Domain modules (scaffolded — no logic yet)
 import { TasksModule } from './modules/tasks/tasks.module';
@@ -14,6 +16,9 @@ import { RemindersModule } from './modules/reminders/reminders.module';
 import { UsersModule } from './modules/users/users.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ActivityLogsModule } from './modules/activity-logs/activity-logs.module';
+import { ConversationsModule } from './modules/conversations/conversations.module';
+import { MessagesModule } from './modules/messages/messages.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -27,6 +32,7 @@ import { ActivityLogsModule } from './modules/activity-logs/activity-logs.module
     DatabaseModule,
     AuthModule,
     UsersModule,
+    GoogleModule,
 
     // Domain modules
     TasksModule,
@@ -34,6 +40,10 @@ import { ActivityLogsModule } from './modules/activity-logs/activity-logs.module
     IdeasModule,
     LabelsModule,
     RemindersModule,
+    ConversationsModule,
+    MessagesModule,
+    ChatModule,
+    HealthModule,
     IntegrationsModule,
     ActivityLogsModule,
   ],
